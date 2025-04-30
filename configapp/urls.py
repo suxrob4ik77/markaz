@@ -24,6 +24,7 @@ router.register(r'homework-reviews',HomeworkReviewViewSet,basename='homework-rev
 router.register(r'months',MonthViewSet,basename='month')
 router.register(r'payment-type',PaymentTypeViewSet,basename='payment-type')
 router.register(r'payment',PaymentViewSet,basename='payment')
+router.register(r'subjects', SubjectViewSet, basename='subject')
 
 urlpatterns = [
     path('post_send_otp/', PhoneSendOTP.as_view()),
@@ -37,7 +38,7 @@ urlpatterns = [
     path('users/detail/<int:pk>/', UserDetailView.as_view(), name='users_detail'),
     path('students-statistic/', StudentFilterView.as_view(), name='recent-students'),
     path('teachers-statistic/', TeacherFilterView.as_view(), name='teachers-statistic'),
-    path('courses-statistics', CourseFilterView.as_view(), name='courses-statistics'),
+    # path('courses-statistics', CourseFilterView.as_view(), name='courses-statistics'),
     path('davomat-statistics', DavomatFilterView.as_view(), name='davomat-statistics'),
     path('payments-statistics', PaymentFilterView.as_view(), name='payments-statistics'),
 ]

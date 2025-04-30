@@ -88,5 +88,17 @@ class GroupStudent(BaseModel):
     start_date = models.DateField()
     end_date = models.DateField(null=True, blank=True)
     descriptions = models.CharField(max_length=500, blank=True, null=True)
+    is_active = models.BooleanField(default=True)
     def __str__(self):
         return self.title
+
+class Subject(BaseModel):
+    title = models.CharField(max_length=50)
+    description = models.TextField(null=True, blank=True)
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        verbose_name = 'Subject'
+        verbose_name_plural = 'Subjects'
