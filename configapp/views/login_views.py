@@ -10,6 +10,7 @@ from ..make_token import *
 from ..serializer import *
 import random
 
+# Tizimga kirish uchun view
 class LoginApi(APIView):
     permission_classes = [AllowAny, ]
 
@@ -23,6 +24,7 @@ class LoginApi(APIView):
         token['is_admin'] = user.is_admin
         return Response(data=token, status=status.HTTP_200_OK)
 
+# O'qituvchi yaratish uchun view
 class TeacherCreateApi(APIView):
     @swagger_auto_schema(request_body=TeacherSerializer)
     def post(self, request):
@@ -32,6 +34,7 @@ class TeacherCreateApi(APIView):
             return Response({"status": True, "detail": "Teacher created"})
         return Response({"status": False, "errors": serializer.errors}, status=400)
 
+# SMS yuborish uchun view
 class PhoneSendOTP(APIView):
     @swagger_auto_schema(request_body=SMSSerializer)
     def post(self, request, *args, **kwargs):
@@ -48,17 +51,17 @@ class PhoneSendOTP(APIView):
                 key = send_otp()
                 print("=======================", key)
                 if key:
-                    # Verification code cache for 5 minutes
+                    # Tasdiqlash kodi 5 daqiqa davomida saqlanadi
                     cache.set(phone_number, key, 600)
                     return Response({'message': "SMS sent successfully"}, status=status.HTTP_200_OK)
                 return Response({'message': "SMS sent Failed"}, status=status.HTTP_400_BAD_REQUEST)
 
-
+# Tasdiqlash kodini yaratish uchun funksiya
 def send_otp():
     otp = str(random.randint(1001, 999900))
     return otp
 
-
+# SMS tasdiqlash uchun view
 class VerifySMS(APIView):
     @swagger_auto_schema(request_body=VerifySMSSerializer)
     def post(self, request):
@@ -80,6 +83,7 @@ class VerifySMS(APIView):
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+# Foydalanuvchi ro'yxatdan o'tkazish uchun view
 class RegisterUserApi(APIView):
     @swagger_auto_schema(request_body=UserSerializer)
     def post(self, request):
@@ -98,6 +102,7 @@ class RegisterUserApi(APIView):
         serializer = UserSerializer(users, many=True)
         return Response(data=serializer.data)
 
+# Foydalanuvchi ma'lumotlarini ko'rish va o'zgartirish uchun view
 class UserDetailView(APIView):
     def get_object(self, pk):
         return get_object_or_404(User, pk=pk)
@@ -118,8 +123,7 @@ class UserDetailView(APIView):
         user.delete()
         return Response({"detail": "Deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
 
-
-
+# Parolni o'zgartirish uchun view
 class ChangePasswordView(APIView):
     permission_classes = (permissions.IsAuthenticated)
 

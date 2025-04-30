@@ -10,17 +10,19 @@ from ..pagination import StudentPagination
 from rest_framework.generics import get_object_or_404
 from ..permissions import *
 
-
+# Talaba API - talabalar bilan ishlash uchun asosiy API
 class StudentApi(viewsets.ModelViewSet):
     queryset = Student.objects.all()
     serializer_class = StudentSerializer
     pagination_class = StudentPagination
 
+    # Harakat turiga qarab serializer tanlash
     def get_serializer_class(self):
         if self.action == 'create':
             return StudentPostSerializer
         return StudentSerializer
 
+    # Yangi talaba yaratish
     @swagger_auto_schema(request_body=StudentPostSerializer)
     def create(self, request, *args, **kwargs):
         user_data = request.data.get('user')
@@ -53,17 +55,18 @@ class StudentApi(viewsets.ModelViewSet):
 
         return Response(response_data, status=status.HTTP_201_CREATED)
 
-
+# Talaba ViewSet - talabalar bilan ishlash uchun
 class StudentViewSet(viewsets.ModelViewSet):
     queryset = Student.objects.all()
     serializer_class = StudentSerializer
     pagination_class = StudentPagination
 
-
+# Ota-ona ViewSet - ota-onalar bilan ishlash uchun
 class ParentViewSet(viewsets.ViewSet):
     # permission_classes = [IsAdminOrReadPatchOnly]
     pagination_class = StudentPagination
 
+    # Barcha ota-onalarni olish
     def list(self, request):
         parents = Parents.objects.all()
         paginator = self.pagination_class()
@@ -71,11 +74,13 @@ class ParentViewSet(viewsets.ViewSet):
         serializer = ParentsSerializer(result_page, many=True)
         return paginator.get_paginated_response(serializer.data)
 
+    # ID bo'yicha ota-onani olish
     def retrieve(self, request, pk=None):
         parent = get_object_or_404(Parents, pk=pk)
         serializer = ParentsSerializer(parent)
         return Response(serializer.data)
 
+    # Yangi ota-ona yaratish
     @action(detail=False, methods=['post'], url_path='create/parent')
     @swagger_auto_schema(request_body=ParentsSerializer)
     def create_parent(self, request):
@@ -85,6 +90,7 @@ class ParentViewSet(viewsets.ViewSet):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    # Mavjud ota-onani yangilash
     @action(detail=True, methods=['put'], url_path='update/parent')
     @swagger_auto_schema(request_body=ParentsSerializer)
     def update_parent(self, request, pk=None):
@@ -95,6 +101,7 @@ class ParentViewSet(viewsets.ViewSet):
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    # Ota-onani o'chirish
     @action(detail=True, methods=['delete'], url_path='delete/parent')
     def delete_parent(self, request, pk=None):
         parent = get_object_or_404(Parents, pk=pk)

@@ -3,6 +3,7 @@ from rest_framework import serializers
 from . import *
 from ..models import *
 
+# O'qituvchi serializeri - o'qituvchilar ma'lumotlarini JSON formatiga o'tkazish uchun
 class TeacherSerializer(serializers.ModelSerializer):
     # user = models.CharField(read_only=True)
 
@@ -12,11 +13,17 @@ class TeacherSerializer(serializers.ModelSerializer):
 
 
 
+# O'qituvchi foydalanuvchi serializeri - o'qituvchining foydalanuvchi hisobi ma'lumotlarini JSON formatiga o'tkazish uchun
 class TeacherUserSerializer(serializers.ModelSerializer):
+    # Foydalanuvchi faol yoki faol emasligi
     is_active = serializers.BooleanField(read_only=True)
+    # Foydalanuvchi xodim yoki xodim emasligi
     is_staff = serializers.BooleanField(read_only=True)
+    # Foydalanuvchi admin yoki admin emasligi
     is_admin = serializers.BooleanField(read_only=True)
+    # Foydalanuvchi o'qituvchi yoki o'qituvchi emasligi
     is_teacher = serializers.BooleanField(read_only=True)
+    # Foydalanuvchi talaba yoki talaba emasligi
     is_student = serializers.BooleanField(read_only=True)
 
 
@@ -27,15 +34,18 @@ class TeacherUserSerializer(serializers.ModelSerializer):
 
 
 
+# O'qituvchi yaratish serializeri - yangi o'qituvchi yaratish uchun
 class TeacherPostSerializer(serializers.Serializer):
     user = TeacherUserSerializer()
     teacher = TeacherSerializer()
 
+# Kurs serializeri - kurslar ma'lumotlarini JSON formatiga o'tkazish uchun
 class CourseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Course
         fields = ['id', 'title', 'descriptions']
 
+# Bo'lim serializeri - bo'limlar ma'lumotlarini JSON formatiga o'tkazish uchun
 class DepartmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Departments

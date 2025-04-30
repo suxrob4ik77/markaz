@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from django.db.models import Count, Q, Sum
+from django.db.models import Count, Q, Sum, F
 from django.utils.timezone import make_aware
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
@@ -290,3 +290,170 @@ class PaymentFilterView(APIView):
         )
 
         return Response(payment_stats, status=status.HTTP_200_OK)
+
+# Statistik ma'lumotlarni olish uchun viewset
+class StaticViewSet(viewsets.ViewSet):
+    # permission_classes = [IsAdminOnly]
+
+    # Barcha statistik ma'lumotlarni olish
+    def list(self, request):
+        # Talabalar soni
+        student_count = User.objects.filter(role='student').count()
+        # O'qituvchilar soni
+        teacher_count = User.objects.filter(role='teacher').count()
+        # Guruhlar soni
+        group_count = GroupStudent.objects.count()
+        # To'lovlar summasi
+        payment_sum = Payment.objects.aggregate(total=Sum('amount'))['total'] or 0
+
+        data = {
+            'student_count': student_count,
+            'teacher_count': teacher_count,
+            'group_count': group_count,
+            'payment_sum': payment_sum
+        }
+        return Response(data)
+
+    # Talabalar statistikasini olish
+    @action(detail=False, methods=['get'], url_path='student-stats')
+    def student_stats(self, request):
+        # Talabalar soni guruhlar bo'yicha
+        group_stats = GroupStudent.objects.annotate(
+            student_count=Count('get_student')
+        ).values('title', 'student_count')
+
+        # Talabalar soni kurslar bo'yicha
+        course_stats = Course.objects.annotate(
+            student_count=Count('groupstudent__get_student')
+        ).values('title', 'student_count')
+
+        data = {
+            'group_stats': group_stats,
+            'course_stats': course_stats
+        }
+        return Response(data)
+
+    # O'qituvchilar statistikasini olish
+    @action(detail=False, methods=['get'], url_path='teacher-stats')
+    def teacher_stats(self, request):
+        # O'qituvchilar soni kurslar bo'yicha
+        course_stats = Course.objects.annotate(
+            teacher_count=Count('get_course')
+        ).values('title', 'teacher_count')
+
+        # O'qituvchilar soni guruhlar bo'yicha
+        group_stats = GroupStudent.objects.annotate(
+            teacher_count=Count('teacher')
+        ).values('title', 'teacher_count')
+
+        data = {
+            'course_stats': course_stats,
+            'group_stats': group_stats
+        }
+        return Response(data)
+
+    # To'lovlar statistikasini olish
+    @action(detail=False, methods=['get'], url_path='payment-stats')
+    def payment_stats(self, request):
+        # To'lovlar summasi oylar bo'yicha
+        month_stats = Month.objects.annotate(
+            payment_sum=Sum('payment__price')
+        ).values('title', 'payment_sum')
+
+        # To'lovlar summasi to'lov turlari bo'yicha
+        type_stats = PaymentType.objects.annotate(
+            payment_sum=Sum('payment__price')
+        ).values('title', 'payment_sum')
+
+        data = {
+            'month_stats': month_stats,
+            'type_stats': type_stats
+        }
+        return Response(data)
+
+    # Davomat statistikasini olish
+    @action(detail=False, methods=['get'], url_path='attendance-stats')
+    def attendance_stats(self, request):
+        # Davomat foizi guruhlar bo'yicha
+        group_stats = GroupStudent.objects.annotate(
+            total_lessons=Count('lessons'),
+            attended_lessons=Count('lessons__attendances', filter=Q(lessons__attendances__status__name='Keldi')),
+            attendance_percentage=F('attended_lessons') * 100 / F('total_lessons')
+        ).values('name', 'attendance_percentage')
+
+        # Davomat foizi talabalar bo'yicha
+        student_stats = User.objects.filter(role='student').annotate(
+            total_lessons=Count('attendances'),
+            attended_lessons=Count('attendances', filter=Q(attendances__status__name='Keldi')),
+            attendance_percentage=F('attended_lessons') * 100 / F('total_lessons')
+        ).values('first_name', 'last_name', 'attendance_percentage')
+
+        data = {
+            'group_stats': group_stats,
+            'student_stats': student_stats
+        }
+        return Response(data)
+
+    # Vazifalar statistikasini olish
+    @action(detail=False, methods=['get'], url_path='homework-stats')
+    def homework_stats(self, request):
+        # Vazifalar bajarilishi guruhlar bo'yicha
+        group_stats = GroupStudent.objects.annotate(
+            total_homeworks=Count('homeworks'),
+            completed_homeworks=Count('homeworks__submissions', filter=Q(homeworks__submissions__is_checked=True)),
+            completion_percentage=F('completed_homeworks') * 100 / F('total_homeworks')
+        ).values('title', 'completion_percentage')
+
+        # Vazifalar bajarilishi talabalar bo'yicha
+        student_stats = User.objects.filter(is_student=True).annotate(
+            total_homeworks=Count('student__submissions'),
+            completed_homeworks=Count('student__submissions', filter=Q(student__submissions__is_checked=True)),
+            completion_percentage=F('completed_homeworks') * 100 / F('total_homeworks')
+        ).values('phone_number', 'completion_percentage')
+
+        data = {
+            'group_stats': group_stats,
+            'student_stats': student_stats
+        }
+        return Response(data)
+
+    # Ma'lum bir vaqt oralig'idagi statistikani olish
+    @action(detail=False, methods=['post'], url_path='date-range-stats')
+    @swagger_auto_schema(request_body=DateFilterSerializer)
+    def date_range_stats(self, request):
+        serializer = DateFilterSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        start_date = serializer.validated_data['start_date']
+        end_date = serializer.validated_data['end_date']
+
+        # To'lovlar summasi
+        payment_sum = Payment.objects.filter(
+            created_at__range=[start_date, end_date]
+        ).aggregate(total=Sum('amount'))['total'] or 0
+
+        # Davomat foizi
+        attendance_stats = Davomat.objects.filter(
+            created_at__range=[start_date, end_date]
+        ).aggregate(
+            total=Count('id'),
+            attended=Count('id', filter=Q(status__name='Keldi')),
+            percentage=F('attended') * 100 / F('total')
+        )
+
+        # Vazifalar bajarilishi
+        homework_stats = Homework.objects.filter(
+            created_at__range=[start_date, end_date]
+        ).aggregate(
+            total=Count('id'),
+            completed=Count('id', filter=Q(is_completed=True)),
+            percentage=F('completed') * 100 / F('total')
+        )
+
+        data = {
+            'payment_sum': payment_sum,
+            'attendance_stats': attendance_stats,
+            'homework_stats': homework_stats
+        }
+        return Response(data)

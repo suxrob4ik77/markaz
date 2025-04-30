@@ -82,21 +82,21 @@ from ..pagination import *
 from ..serializer import CourseSerializer,DepartmentSerializer
 from ..models import Departments,Course,User,Teacher
 
-
-
-
+# O'qituvchi ViewSet - o'qituvchilar bilan ishlash uchun
 class TeacherViewSet(viewsets.ModelViewSet):
     queryset = Teacher.objects.all()
     serializer_class = TeacherSerializer
     pagination_class = TeacherPagination
     # permission_classes = [IsGetOrPatchOnly]
 
+    # Harakat turiga qarab serializer tanlash
     def get_serializer_class(self):
         data={'success':True}
         if self.action == 'create':
             return TeacherPostSerializer
         return TeacherSerializer
 
+    # Yangi o'qituvchi yaratish
     @swagger_auto_schema(request_body=TeacherPostSerializer)
     def create(self, request, *args, **kwargs):
         user_data = request.data.get('user')
@@ -129,14 +129,14 @@ class TeacherViewSet(viewsets.ModelViewSet):
         }
         return Response(response_data, status=status.HTTP_201_CREATED)
 
-
-
+# Bo'lim ViewSet - bo'limlar bilan ishlash uchun
 class DepartmentViewSet(ModelViewSet):
     queryset = Departments.objects.all()
     serializer_class = DepartmentSerializer
     pagination_class = DepartmentPagination
     # permission_classes = [IsAdminOrReadPatchOnly]
 
+# Kurs ViewSet - kurslar bilan ishlash uchun
 class CourseViewSet(ModelViewSet):
     queryset = Course.objects.all()
     serializer_class = CourseSerializer
