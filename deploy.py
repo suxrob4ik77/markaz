@@ -1,5 +1,5 @@
 
-# ssh root@164.92.182.245
+# ssh root@165.232.65.57
 # ssh-keygen
     #  cat .ssh/id_rsa.pub
     # cd /var/
@@ -60,7 +60,7 @@ WantedBy=multi-user.target
 
 server {
     listen 80;
-    server_name 164.92.182.245;
+    server_name 165.232.65.57;
 
     location = /favicon.ico { access_log off; log_not_found off; }
     location /static/ {
