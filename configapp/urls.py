@@ -79,9 +79,7 @@
 #     path('davomat-statistics', DavomatFilterView.as_view(), name='davomat-statistics'),
 #     # To'lovlar statistikasi uchun endpoint
 #     path('payments-statistics', PaymentFilterView.as_view(), name='payments-statistics'),
-# ]
 #
-
 from rest_framework.routers import DefaultRouter
 from django.urls import path, include
 from rest_framework_simplejwt.views import TokenRefreshView, TokenBlacklistView
@@ -91,6 +89,9 @@ from .views import *
 from .views.davomat_views import *
 from .views.group_views import *
 from .views.static_views import StaticViewSet
+
+from django.urls import path,include
+
 
 # DefaultRouter yaratish - API endpointlarini avtomatik yaratish uchun
 router = DefaultRouter()
