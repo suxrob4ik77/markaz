@@ -1,7 +1,7 @@
 
-# ssh root@64.226.105.129
+# ssh root@164.92.182.245
 # ssh-keygen
-#  cat .ssh/id_rsa.pub
+    #  cat .ssh/id_rsa.pub
     # cd /var/
 # mkdir www/
 # cd www/
@@ -13,7 +13,7 @@
 # python3 manage.py migrate
 # python3 manage.py collectstatic
 # sudo ufw 8000
-# python3 manage.py runserver 0.0.0.0:8000
+# python3 manage.py runserver 0.0.0.0:80
 #
 
 """
@@ -60,7 +60,7 @@ WantedBy=multi-user.target
 
 server {
     listen 80;
-    server_name 207.154.245.36;
+    server_name 164.92.182.245;
 
     location = /favicon.ico { access_log off; log_not_found off; }
     location /static/ {
